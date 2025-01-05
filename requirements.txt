@@ -4,3 +4,4 @@ langchain-groq
 aio-pika
 python-dotenv
 aiohttp
+PyPDF2

@@ -27,7 +27,7 @@ class EventsService:
             job_description = event["data"]["job_description"]
             resume = event["data"]["resume"]
 
-            score = ResumeScoreService.get_score(job_description, resume)
+            score = await ResumeScoreService.get_score(job_description, resume)
 
             await EventService.publish(
                 JOB_QUEUE,
@@ -59,7 +59,7 @@ class EventsService:
             job_description = message["data"]["job_description"]
             resume = message["data"]["resume"]
 
-            score = ResumeScoreService.get_score(job_description, resume)
+            score = await ResumeScoreService.get_score(job_description, resume)
             return {
                 "score": score.score,
                 "explanation": score.explanation or "",

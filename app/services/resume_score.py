@@ -1,3 +1,4 @@
+import logging
 import time
 
 from langchain_core.output_parsers import JsonOutputParser
@@ -8,6 +9,7 @@ from langchain_ollama import ChatOllama
 from app import GROQ_API_KEY, GROQ_MODEL, MODEL, USE_GROQ
 from app.services.system_messages import resume_evaluation, resume_template
 from app.types.resume_score import ResumeScore
+from app.utils.pdf_text import fetch_pdf_text
 
 _resume_score_request_parser = JsonOutputParser(pydantic_object=ResumeScore)
 
@@ -33,8 +35,21 @@ _llm = (
 
 class ResumeScoreService:
     @staticmethod
-    def get_score(job_description: str, resume: str) -> ResumeScore:
+    async def __get_resume(resume: str) -> str:
+        # See if the resume is a URL
+        if not resume.startswith("http"):
+            return resume
+
+        logging.info(f"Fetching resume from URL: {resume}")
+
+        # Fetch the resume from the URL
+        return await fetch_pdf_text(resume)
+
+    @staticmethod
+    async def get_score(job_description: str, resume: str) -> ResumeScore:
         chain = _resume_prompt | _llm | _resume_score_request_parser
+
+        resume = await ResumeScoreService.__get_resume(resume)
 
         explanation = None
         score = None
@@ -57,7 +72,7 @@ class ResumeScoreService:
                 if not isinstance(score, (int, float)):
                     raise ValueError("Invalid score format.")
             except Exception as e:
-                print(f"Error parsing response on attempt {nth_try}: {e}")
+                logging.error(f"Error parsing response on attempt {nth_try}: {e}")
                 score = None
 
             nth_try += 1
