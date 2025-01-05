@@ -1,0 +1,6 @@
+langchain-core
+langchain-ollama
+langchain-groq
+aio-pika
+python-dotenv
+aiohttp
